@@ -1,0 +1,51 @@
+name: Build Offline APK (Zen)
+
+on:
+  workflow_dispatch: # Run manually from GitHub Actions tab
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Capacitor CLI
+        run: npm install -g @capacitor/cli
+
+      - name: Install Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Prepare Capacitor project
+        run: |
+          mkdir cap
+          cd cap
+          npm init -y
+          npm install @capacitor/android
+          npx cap init "Zen" "com.zen.app" --web-dir=www
+
+      - name: Unzip dist build into www
+        run: |
+          unzip dist-build.zip -d cap/www
+
+      - name: Copy Android platform
+        run: |
+          cd cap
+          npx cap add android
+
+      - name: Build APK (Debug)
+        run: |
+          cd cap/android
+          ./gradlew assembleDebug
+
+      - name: Upload APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Zen-Offline-APK
+          path: cap/android/app/build/outputs/apk/debug/app-debug.apk
