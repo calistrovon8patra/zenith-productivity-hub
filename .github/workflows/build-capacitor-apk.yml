@@ -1,59 +1,50 @@
-name: Build Offline APK (Zen)
+name: Build Android APK (TWA)
 
 on:
-  workflow_dispatch: # Run manually from GitHub Actions tab
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout repo
         uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-
-      - name: Install Capacitor CLI
-        run: npm install -g @capacitor/cli
 
       - name: Install Android SDK
         uses: android-actions/setup-android@v3
 
-      # ✅ Force Java 17 so Gradle compiles correctly
-      - name: Set up Java 17
+      - name: Set up Java 21
         uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
+
+      - name: Unzip dist build
+        run: |
+          unzip dist-build.zip -d dist
+
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install dependencies
+        run: npm ci
 
       - name: Prepare Capacitor project
         run: |
-          mkdir cap
-          cd cap
-          npm init -y
-          npm install @capacitor/android
-          npx cap init "Zen" "com.zen.app" --web-dir=www
-
-      - name: Unzip dist build into www
-        run: |
-          unzip dist-build.zip -d cap/www
-
-      - name: Add Android platform
-        run: |
-          cd cap
-          npx cap add android
+          npx cap sync android
 
       - name: Build APK (Debug)
         run: |
-          cd cap/android
-          chmod +x ./gradlew
+          cd android
           ./gradlew assembleDebug
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Zen-Offline-APK
-          path: cap/android/app/build/outputs/apk/debug/app-debug.apk
+          name: app-debug
+          path: android/app/build/outputs/apk/debug/app-debug.apk
