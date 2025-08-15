@@ -1,0 +1,26 @@
+name: Build & Zip Dist
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Install deps
+        run: npm install
+      - name: Build
+        run: npm run build
+      - name: Zip dist
+        run: |
+          cd dist
+          zip -r ../dist-build.zip .
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist-build
+          path: dist-build.zip
