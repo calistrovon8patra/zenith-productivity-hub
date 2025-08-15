@@ -16,13 +16,13 @@ jobs:
         with:
           node-version: 20
 
-      - name: Setup Java
+      - name: Setup Java (required for Android/Gradle)
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '11'
 
-      - name: Ensure dist exists
+      - name: Ensure dist exists (build if needed)
         run: |
           if [ ! -d "dist" ]; then
             npm ci
@@ -32,11 +32,18 @@ jobs:
       - name: Install Bubblewrap CLI
         run: npm install -g @bubblewrap/cli
 
-      - name: Initialize TWA project with Bubblewrap
+      - name: Initialize TWA project without icon
         run: |
-          npx @bubblewrap/cli init --manifest=dist/manifest.json --shortName=Zen --name=Zen --display=standalone --startUrl=/index.html --applicationId=com.calistrovon8patra.zen --localWebRoot=dist --outputDirectory=twa || true
+          npx @bubblewrap/cli init --manifest=dist/manifest.json \
+            --shortName=Zen \
+            --name=Zen \
+            --display=standalone \
+            --startUrl=/index.html \
+            --applicationId=com.calistrovon8patra.zen \
+            --localWebRoot=dist \
+            --outputDirectory=twa || true
 
-      - name: Build APK
+      - name: Build APK (debug)
         run: |
           cd twa || exit 1
           chmod +x gradlew || true
